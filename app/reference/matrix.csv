@@ -1,0 +1,6 @@
+Zone,West,South,North,East,North-East
+West,4,6,6,7,10
+South,6,4,6,7,10
+North,6,6,4,7,8
+East,7,7,7,4,6
+North-East,10,10,8,6,4

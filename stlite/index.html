@@ -1,0 +1,85 @@
+<!--
+  stlite bundle entry point.
+
+  This file packages the entire Streamlit app as a static HTML/JS bundle that
+  runs Python in the browser via Pyodide (WebAssembly). After a one-time
+  ~30–50 MB cached download, the app runs fully offline on any device
+  (desktop or phone) and can be installed as a PWA from the browser's
+  address bar (desktop) or "Add to Home Screen" (phone).
+
+  Build & deploy:
+    1.  Run `python -m http.server 8000` from the repo root to test locally,
+        then visit http://localhost:8000/stlite/  — the app loads in-browser.
+    2.  Deploy the whole repo (or just stlite/ + app/ + the matrix.csv) to any
+        HTTPS static host (GitHub Pages, Cloudflare Pages, nginx).
+    3.  Founder visits the URL once on each device:
+          - Desktop Chrome/Edge: click "Install" icon in the address bar.
+          - Phone: tap "Add to Home Screen" / "Install app".
+        After install the app icon appears as a native app and runs offline
+        forever on that device.
+
+  Notes:
+    * The app folder (../app) is loaded by stlite via the entrypoint field below.
+    * Update the version string in `wheels:` whenever a dependency changes.
+    * For local development of the Python code, still use:
+          streamlit run streamlit_app.py
+      from the repo root — stlite is only needed for distribution.
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Kiirus Xpress — Logistics Intelligence</title>
+    <link rel="manifest" href="../manifest.json" />
+    <meta name="theme-color" content="#0e1117" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/[email protected]/build/stlite.css" />
+  </head>
+  <body>
+    <streamlit-app>
+      <app-entrypoint-file name="streamlit_app.py">
+        <!--
+          Inline the entry point. The Python imports `app.*` so stlite needs
+          the app/ directory mounted under the same root.
+        -->
+import sys
+from pathlib import Path
+ROOT = Path("/mount").resolve()
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from app.main import main
+main()
+      </app-entrypoint-file>
+
+      <!-- Mount the application folder so `app.*` imports resolve. -->
+      <app-file name="app/__init__.py" url="../app/__init__.py"></app-file>
+      <app-file name="app/main.py" url="../app/main.py"></app-file>
+      <!-- Add additional <app-file> entries here for every Python module in app/.
+           For production, a small build script can enumerate them; for v1 a
+           static listing is fine and easier to audit. -->
+
+      <!-- Bundled reference data — read at first launch. -->
+      <app-file name="app/reference/matrix.csv" url="../app/reference/matrix.csv"></app-file>
+
+      <!-- Required Python wheels (loaded by Pyodide). -->
+      <requirements>
+        streamlit
+        pandas
+        openpyxl
+        plotly
+        numpy
+      </requirements>
+    </streamlit-app>
+
+    <script src="https://cdn.jsdelivr.net/npm/@stlite/[email protected]/build/stlite.js"></script>
+
+    <!-- Register a tiny service worker so installed PWAs work fully offline.
+         The stlite runtime + wheel files are cached on first load; subsequent
+         visits read from cache. -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("./sw.js").catch((e) => console.log("SW failed:", e));
+      }
+    </script>
+  </body>
+</html>
