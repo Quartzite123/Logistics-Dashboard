@@ -1,29 +1,25 @@
 <!--
   stlite bundle entry point.
 
-  This file packages the entire Streamlit app as a static HTML/JS bundle that
-  runs Python in the browser via Pyodide (WebAssembly). After a one-time
-  ~30–50 MB cached download, the app runs fully offline on any device
-  (desktop or phone) and can be installed as a PWA from the browser's
-  address bar (desktop) or "Add to Home Screen" (phone).
+  Packages the Streamlit app as a static HTML/JS bundle that runs Python in
+  the browser via Pyodide (WebAssembly). After a one-time ~30–50 MB cached
+  download, the app runs fully offline and can be installed as a PWA.
 
   Build & deploy:
-    1.  Run `python -m http.server 8000` from the repo root to test locally,
-        then visit http://localhost:8000/stlite/  — the app loads in-browser.
-    2.  Deploy the whole repo (or just stlite/ + app/ + the matrix.csv) to any
-        HTTPS static host (GitHub Pages, Cloudflare Pages, nginx).
-    3.  Founder visits the URL once on each device:
-          - Desktop Chrome/Edge: click "Install" icon in the address bar.
-          - Phone: tap "Add to Home Screen" / "Install app".
-        After install the app icon appears as a native app and runs offline
-        forever on that device.
+    1.  Run `python -m http.server 8000` from the repo root, then visit
+        http://localhost:8000/stlite/ to test locally.
+    2.  Deploy the whole repo to any HTTPS static host (GitHub Pages,
+        Cloudflare Pages, nginx).
+    3.  Visit the URL once on each device → "Install" / "Add to Home Screen".
 
   Notes:
-    * The app folder (../app) is loaded by stlite via the entrypoint field below.
-    * Update the version string in `wheels:` whenever a dependency changes.
-    * For local development of the Python code, still use:
-          streamlit run streamlit_app.py
-      from the repo root — stlite is only needed for distribution.
+    * stlite version is pinned (see CDN URLs below). Bump only after testing.
+    * The <app-file> list is generated — re-run the listing script when
+      adding/removing app modules (see chat history).
+    * Private business-data files (Kiirus*.xlsx, kiirus*.csv at repo root)
+      are intentionally EXCLUDED from the bundle — they should never be
+      shipped to a public deployment. Sample inputs are user-supplied at
+      runtime via the in-app upload dialog.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -32,16 +28,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Kiirus Xpress — Logistics Intelligence</title>
     <link rel="manifest" href="../manifest.json" />
-    <meta name="theme-color" content="#0e1117" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/[email protected]/build/stlite.css" />
+    <meta name="theme-color" content="#0b0c0d" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/browser@1.7.3/build/stlite.css" />
   </head>
   <body>
     <streamlit-app>
       <app-entrypoint-file name="streamlit_app.py">
-        <!--
-          Inline the entry point. The Python imports `app.*` so stlite needs
-          the app/ directory mounted under the same root.
-        -->
 import sys
 from pathlib import Path
 ROOT = Path("/mount").resolve()
@@ -51,31 +43,69 @@ from app.main import main
 main()
       </app-entrypoint-file>
 
-      <!-- Mount the application folder so `app.*` imports resolve. -->
+      <!-- Application Python sources, custom-component assets, and bundled
+           reference data. Generated — see chat history for the listing
+           script. Re-run that script after adding new files under app/. -->
       <app-file name="app/__init__.py" url="../app/__init__.py"></app-file>
+      <app-file name="app/assets/logo.png" url="../app/assets/logo.png"></app-file>
+      <app-file name="app/components/__init__.py" url="../app/components/__init__.py"></app-file>
+      <app-file name="app/components/_html/kpi_grid/index.html" url="../app/components/_html/kpi_grid/index.html"></app-file>
+      <app-file name="app/components/_html/kpi_grid/kpi_grid.js" url="../app/components/_html/kpi_grid/kpi_grid.js"></app-file>
+      <app-file name="app/components/_html/kpi_grid/styles.css" url="../app/components/_html/kpi_grid/styles.css"></app-file>
+      <app-file name="app/components/_html/sidebar/index.html" url="../app/components/_html/sidebar/index.html"></app-file>
+      <app-file name="app/components/_html/sidebar/logo.png" url="../app/components/_html/sidebar/logo.png"></app-file>
+      <app-file name="app/components/_html/sidebar/sidebar.js" url="../app/components/_html/sidebar/sidebar.js"></app-file>
+      <app-file name="app/components/_html/sidebar/styles.css" url="../app/components/_html/sidebar/styles.css"></app-file>
+      <app-file name="app/components/chart_expand.py" url="../app/components/chart_expand.py"></app-file>
+      <app-file name="app/components/chart_heatmap.py" url="../app/components/chart_heatmap.py"></app-file>
+      <app-file name="app/components/chart_pair.py" url="../app/components/chart_pair.py"></app-file>
+      <app-file name="app/components/data_table.py" url="../app/components/data_table.py"></app-file>
+      <app-file name="app/components/global_styles.py" url="../app/components/global_styles.py"></app-file>
+      <app-file name="app/components/kpi_cards.py" url="../app/components/kpi_cards.py"></app-file>
+      <app-file name="app/components/kpi_grid_component.py" url="../app/components/kpi_grid_component.py"></app-file>
+      <app-file name="app/components/layout.py" url="../app/components/layout.py"></app-file>
+      <app-file name="app/components/modals.py" url="../app/components/modals.py"></app-file>
+      <app-file name="app/components/sidebar_component.py" url="../app/components/sidebar_component.py"></app-file>
+      <app-file name="app/components/theme.py" url="../app/components/theme.py"></app-file>
+      <app-file name="app/components/upload_dialog.py" url="../app/components/upload_dialog.py"></app-file>
+      <app-file name="app/data/origin_city_master.csv" url="../app/data/origin_city_master.csv"></app-file>
       <app-file name="app/main.py" url="../app/main.py"></app-file>
-      <!-- Add additional <app-file> entries here for every Python module in app/.
-           For production, a small build script can enumerate them; for v1 a
-           static listing is fine and easier to audit. -->
-
-      <!-- Bundled reference data — read at first launch. -->
+      <app-file name="app/pipeline/__init__.py" url="../app/pipeline/__init__.py"></app-file>
+      <app-file name="app/pipeline/dedup.py" url="../app/pipeline/dedup.py"></app-file>
+      <app-file name="app/pipeline/ingest.py" url="../app/pipeline/ingest.py"></app-file>
+      <app-file name="app/pipeline/oda.py" url="../app/pipeline/oda.py"></app-file>
+      <app-file name="app/pipeline/origin_lookup.py" url="../app/pipeline/origin_lookup.py"></app-file>
+      <app-file name="app/pipeline/sla.py" url="../app/pipeline/sla.py"></app-file>
+      <app-file name="app/pipeline/zones.py" url="../app/pipeline/zones.py"></app-file>
       <app-file name="app/reference/matrix.csv" url="../app/reference/matrix.csv"></app-file>
+      <app-file name="app/reference/pincode_master.xlsx" url="../app/reference/pincode_master.xlsx"></app-file>
+      <app-file name="app/sections/__init__.py" url="../app/sections/__init__.py"></app-file>
+      <app-file name="app/sections/customize.py" url="../app/sections/customize.py"></app-file>
+      <app-file name="app/sections/edit.py" url="../app/sections/edit.py"></app-file>
+      <app-file name="app/sections/landing.py" url="../app/sections/landing.py"></app-file>
+      <app-file name="app/sections/tat.py" url="../app/sections/tat.py"></app-file>
+      <app-file name="app/sections/transit.py" url="../app/sections/transit.py"></app-file>
+      <app-file name="app/store/__init__.py" url="../app/store/__init__.py"></app-file>
+      <app-file name="app/store/db.py" url="../app/store/db.py"></app-file>
+      <app-file name="app/store/queries.py" url="../app/store/queries.py"></app-file>
+      <app-file name="app/store/schema.py" url="../app/store/schema.py"></app-file>
+      <app-file name="app/store/seed.py" url="../app/store/seed.py"></app-file>
+      <app-file name="streamlit_app.py" url="../streamlit_app.py"></app-file>
 
-      <!-- Required Python wheels (loaded by Pyodide). -->
+      <!-- Python wheels loaded by Pyodide. Mirrors requirements.txt. -->
       <requirements>
         streamlit
         pandas
         openpyxl
         plotly
         numpy
+        streamlit-sortables
       </requirements>
     </streamlit-app>
 
-    <script src="https://cdn.jsdelivr.net/npm/@stlite/[email protected]/build/stlite.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stlite/browser@1.7.3/build/stlite.js"></script>
 
-    <!-- Register a tiny service worker so installed PWAs work fully offline.
-         The stlite runtime + wheel files are cached on first load; subsequent
-         visits read from cache. -->
+    <!-- Service worker for offline PWA caching (stlite runtime + wheels). -->
     <script>
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("./sw.js").catch((e) => console.log("SW failed:", e));

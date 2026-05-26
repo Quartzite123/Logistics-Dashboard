@@ -1,0 +1,143 @@
+<!doctype html>
+<html data-theme="dark" data-density="balanced" data-sidebar="standard">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css"/>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: var(--sidebar-bg); }
+    body { overflow: hidden; }
+
+    .sidebar {
+      width: 100%;
+      height: 100vh;
+      border-right: 0;
+    }
+
+    [data-sidebar="collapsed"] .sidebar-brand-text,
+    [data-sidebar="collapsed"] .nav-text,
+    [data-sidebar="collapsed"] .nav-badge,
+    [data-sidebar="collapsed"] .sidebar-section-label,
+    [data-sidebar="collapsed"] .theme-toggle,
+    [data-sidebar="collapsed"] .sidebar-status,
+    [data-sidebar="collapsed"] .sidebar-footer-meta { display: none !important; }
+    [data-sidebar="collapsed"] .sidebar-brand { justify-content: center; padding: 22px 8px 18px; }
+    [data-sidebar="collapsed"] .nav-row { grid-template-columns: 28px; justify-content: center; padding: 0; }
+
+    .sidebar-brand-logo img {
+      object-position: left center;
+      object-fit: cover;
+      transform: scale(2.6) translateX(-3px);
+    }
+
+    .sidebar-collapse-btn .ic-collapsed { display: none; }
+    [data-sidebar="collapsed"] .sidebar-collapse-btn .ic-expanded { display: none; }
+    [data-sidebar="collapsed"] .sidebar-collapse-btn .ic-collapsed { display: inline; }
+
+    .spacer { flex: 1; }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <button class="sidebar-collapse-btn" data-action="toggle_collapse" aria-label="Toggle sidebar">
+      <svg class="ic-expanded" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4l-4 4 4 4"/></svg>
+      <svg class="ic-collapsed" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>
+    </button>
+
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-logo">
+        <img src="logo.png" alt="Kiirus"/>
+      </div>
+      <div class="sidebar-brand-text">
+        <div class="sidebar-brand-name">Kiirus Xpress</div>
+        <div class="sidebar-brand-tag">Logistics &middot; Intelligence</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section-label">Workspace</div>
+
+    <nav class="sidebar-nav" role="navigation">
+      <button class="nav-row" data-section="Landing" aria-current="false" title="Landing &mdash; Overview">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        </span>
+        <span class="nav-text">
+          <span class="nav-label">Landing</span>
+          <span class="nav-sublabel">Overview</span>
+        </span>
+        <span class="nav-badge" data-badge="landing"></span>
+      </button>
+
+      <button class="nav-row" data-section="TAT Analysis" aria-current="false" title="TAT Analysis &mdash; Delivered SLA">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 2"/></svg>
+        </span>
+        <span class="nav-text">
+          <span class="nav-label">TAT Analysis</span>
+          <span class="nav-sublabel">Delivered SLA</span>
+        </span>
+        <span class="nav-badge" data-badge="tat"></span>
+      </button>
+
+      <button class="nav-row" data-section="Transit" aria-current="false" title="Transit &mdash; In-flight">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11h9V4H2zM11 7h2.5l1.5 2v2h-4"/><circle cx="5" cy="13" r="1.3"/><circle cx="12" cy="13" r="1.3"/></svg>
+        </span>
+        <span class="nav-text">
+          <span class="nav-label">Transit</span>
+          <span class="nav-sublabel">In-flight</span>
+        </span>
+        <span class="nav-badge" data-badge="transit"></span>
+      </button>
+
+      <button class="nav-row" data-section="Customize" aria-current="false" title="Customize &mdash; Ad-hoc query">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h10M5 8h6M7 12h2"/></svg>
+        </span>
+        <span class="nav-text">
+          <span class="nav-label">Customize</span>
+          <span class="nav-sublabel">Ad-hoc query</span>
+        </span>
+      </button>
+
+      <button class="nav-row" data-section="Edit" aria-current="false" title="Edit &mdash; Reference data">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l3-1L13 5l-2-2-7 7-1 3z"/></svg>
+        </span>
+        <span class="nav-text">
+          <span class="nav-label">Edit</span>
+          <span class="nav-sublabel">Reference data</span>
+        </span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="theme-toggle" role="tablist" aria-label="Theme">
+        <button class="theme-toggle-btn" data-action="theme" data-theme-value="dark" aria-pressed="true">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 9.5A5.5 5.5 0 1 1 6.5 3a4.5 4.5 0 0 0 6.5 6.5z"/></svg>
+          Dark
+        </button>
+        <button class="theme-toggle-btn" data-action="theme" data-theme-value="light" aria-pressed="false">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3 3l1 1M12 12l1 1M3 13l1-1M12 4l1-1"/></svg>
+          Light
+        </button>
+      </div>
+
+      <div class="sidebar-status"><span class="status-dot"></span>Local &middot; Offline-ready</div>
+      <div class="sidebar-status" style="color: var(--text-dim);">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--text-dim);display:inline-block;"></span>
+        <span data-slot="db-meta">kiirus.db</span>
+      </div>
+      <div class="sidebar-footer-meta">
+        <span data-slot="version">v 1.0.0</span>
+        <span>BUILT FOR KIIRUS</span>
+      </div>
+    </div>
+  </aside>
+
+  <script src="sidebar.js"></script>
+</body>
+</html>
