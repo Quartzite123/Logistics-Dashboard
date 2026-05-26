@@ -85,14 +85,13 @@
           "app/sections/customize.py":                        { url: "../app/sections/customize.py" },
           "app/sections/edit.py":                             { url: "../app/sections/edit.py" },
 
-          // Bundled reference data
+          // Bundled reference data — pincode_master.xlsx is 606 KB binary
+          // and is fetched on first load, then cached by the service worker.
+          // seed_pincodes_if_empty() loads it into pincode_master_live the
+          // first time the app boots.
           "app/reference/matrix.csv":                         { url: "../app/reference/matrix.csv" },
+          "app/reference/pincode_master.xlsx":                { url: "../app/reference/pincode_master.xlsx" },
           "app/data/origin_city_master.csv":                  { url: "../app/data/origin_city_master.csv" },
-
-          // NOTE: app/reference/pincode_master.xlsx (606 KB) intentionally
-          // omitted from this first test. Add after the text-only bundle
-          // is confirmed working. Without it, the Edit section's pincode
-          // editor is empty until the user re-uploads one.
         },
       },
       document.getElementById("root")
