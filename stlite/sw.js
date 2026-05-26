@@ -4,7 +4,7 @@
  *
  * After a deploy, bump CACHE_NAME so existing PWAs refresh.
  */
-const CACHE_NAME = "kiirus-v1";
+const CACHE_NAME = "kiirus-v2";
 const PRECACHE = [
   "./",
   "./index.html",
