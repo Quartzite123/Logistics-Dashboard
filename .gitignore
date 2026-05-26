@@ -19,3 +19,18 @@ Kiirus Automation file UPDATED (1).xlsx
 kiirus project file new.xlsx
 kiirus Xpress Pvt Ltd Updated_Project File (1).csv
 Percetaged_file.xlsx
+
+# Business data — never commit
+Kiirus*.xlsx
+kiirus*.xlsx
+*Automation*.xlsx
+*automation*.xlsx
+*.xlsm
+
+# SQLite database — contains customer data
+kiirus.db
+kiirus.db-wal
+kiirus.db-shm
+
+# Keep bundled reference (already tracked, public data)
+!app/reference/pincode_master.xlsx
