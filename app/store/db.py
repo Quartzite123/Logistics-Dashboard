@@ -11,6 +11,7 @@ Schema overview:
 from __future__ import annotations
 
 import sqlite3
+import sys
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -21,7 +22,13 @@ from .schema import (
     sqlite_type,
 )
 
-DB_PATH = Path(__file__).resolve().parent.parent.parent / "kiirus.db"
+# Under stlite / Pyodide (sys.platform == "emscripten") the filesystem is
+# virtual; "/kiirus.db" is mapped to IndexedDB by stlite's persistence layer
+# so the database survives page reloads. Elsewhere, use a repo-root path.
+if sys.platform == "emscripten":
+    DB_PATH = Path("/kiirus.db")
+else:
+    DB_PATH = Path(__file__).resolve().parent.parent.parent / "kiirus.db"
 
 
 # ---------------------------------------------------------------------------
