@@ -7,6 +7,29 @@ from .db import cursor
 from .schema import RAW_COLUMNS, DERIVED_COLUMNS, DB_COL
 
 
+def get_monthly_trend() -> pd.DataFrame:
+    """Month-on-month order volume + SLA bucket counts, keyed by Manifest Date."""
+    with cursor() as c:
+        c.execute(
+            """
+            SELECT
+                strftime('%Y-%m', manifest_date) AS month,
+                COUNT(*) AS total_orders,
+                SUM(CASE WHEN _sla_status='Early'   THEN 1 ELSE 0 END) AS early,
+                SUM(CASE WHEN _sla_status='On Time' THEN 1 ELSE 0 END) AS on_time,
+                SUM(CASE WHEN _sla_status='Late'    THEN 1 ELSE 0 END) AS late
+            FROM shipments_latest
+            WHERE manifest_date IS NOT NULL
+            GROUP BY month
+            ORDER BY month
+            """
+        )
+        rows = [tuple(r) for r in c.fetchall()]
+    return pd.DataFrame(
+        rows, columns=["month", "total_orders", "early", "on_time", "late"]
+    )
+
+
 def load_latest() -> pd.DataFrame:
     """Return shipments_latest as a DataFrame with display column names."""
     select_pieces = [f'"{DB_COL[c]}" AS "{c}"' for c in RAW_COLUMNS]

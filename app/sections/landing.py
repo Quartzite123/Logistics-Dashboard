@@ -10,12 +10,13 @@ NEW layout:
 """
 from __future__ import annotations
 
+import plotly.graph_objects as go
 import streamlit as st
 
 from ..components import kpi_cards, chart_pair
-from ..components.theme import render_section_header
+from ..components.theme import render_section_header, get_plotly_layout
 from ..components.upload_dialog import open_upload_dialog
-from ..store.queries import load_latest
+from ..store.queries import load_latest, get_monthly_trend
 
 
 def render() -> None:
@@ -28,7 +29,46 @@ def render() -> None:
 
     st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
 
-    # Vertically stacked chart pair: top pie + bottom selectable.
+    # Donut only (Overall Delivery Performance) — bottom selectable chart removed.
     top = st.container()
-    bottom = st.container()
-    chart_pair.render(df, section_key="landing", top_box=top, bottom_box=bottom)
+    chart_pair.render(df, section_key="landing", top_box=top, bottom_box=None)
+
+    # Month-on-Month trend chart (replaces the old bottom line chart).
+    df_trend = get_monthly_trend()
+    if not df_trend.empty:
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=df_trend['month'], y=df_trend['total_orders'],
+            name='Total Orders', mode='lines+markers+text',
+            line=dict(color='#60A5FA', width=2),
+            fill='tozeroy',
+            fillcolor='rgba(96,165,250,0.1)',
+            text=df_trend['total_orders'],
+            textposition='top center',
+            textfont=dict(size=11)
+        ))
+        fig.add_trace(go.Scatter(
+            x=df_trend['month'], y=df_trend['early'],
+            name='Early', mode='lines+markers',
+            line=dict(color='#4ADE80', width=2, dash='dash')
+        ))
+        fig.add_trace(go.Scatter(
+            x=df_trend['month'], y=df_trend['on_time'],
+            name='On Time', mode='lines+markers',
+            line=dict(color='#A78BFA', width=2, dash='dash')
+        ))
+        fig.add_trace(go.Scatter(
+            x=df_trend['month'], y=df_trend['late'],
+            name='Late', mode='lines+markers+text',
+            line=dict(color='#F87171', width=2, dash='dash'),
+            text=df_trend['late'],
+            textposition='top center',
+            textfont=dict(size=11)
+        ))
+        fig.update_layout(
+            title='Month on Month Order Volume & Delivery Trend',
+            yaxis_title='Number of Orders',
+            xaxis_title=None,
+            **get_plotly_layout()
+        )
+        st.plotly_chart(fig, use_container_width=True)
