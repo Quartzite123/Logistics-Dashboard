@@ -10,6 +10,7 @@ NEW layout:
 """
 from __future__ import annotations
 
+import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -65,10 +66,23 @@ def render() -> None:
             textposition='top center',
             textfont=dict(size=11)
         ))
+        # Merge the category x-axis into the themed layout so months render as
+        # 4 clean ticks ('Nov 2025'...) instead of weekly date ticks. Merging
+        # avoids a duplicate 'xaxis' kwarg (get_plotly_layout already sets one).
+        layout = get_plotly_layout()
+        layout['xaxis'] = {
+            **layout.get('xaxis', {}),
+            'type': 'category',
+            'tickvals': df_trend['month'].tolist(),
+            'ticktext': [
+                pd.to_datetime(m + '-01').strftime('%b %Y')
+                for m in df_trend['month'].tolist()
+            ],
+        }
         fig.update_layout(
             title='Month on Month Order Volume & Delivery Trend',
             yaxis_title='Number of Orders',
             xaxis_title=None,
-            **get_plotly_layout()
+            **layout
         )
         st.plotly_chart(fig, use_container_width=True)
