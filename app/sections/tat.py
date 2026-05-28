@@ -15,7 +15,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from ..components import chart_pair, data_table, layout
+from ..components import data_table
 from ..components.theme import render_section_header, get_plotly_layout
 from ..components.upload_dialog import open_upload_dialog
 from ..store.queries import (
@@ -85,18 +85,11 @@ def render() -> None:
     if sla_filter != "All":
         df = df[df["_sla_status"] == sla_filter]
 
-    left, right = layout.horizontal_split(section_key="tat", default="60/40")
+    # Full-width shipments table — no side pie chart.
+    _render_table(df)
 
-    if left is not None:
-        with left:
-            _render_table(df)
-
-    if right is not None:
-        top, bottom = layout.vertical_split(section_key="tat", container=right)
-        # Top donut kept; bottom selectable chart replaced by the ODA section.
-        chart_pair.render(df, section_key="tat", top_box=top, bottom_box=None)
-        with bottom:
-            _render_oda_performance()
+    # ODA vs Non-ODA performance chart + detail table — full width below.
+    _render_oda_performance()
 
 
 def _render_table(df: pd.DataFrame) -> None:
@@ -174,72 +167,72 @@ def _render_oda_performance() -> None:
         )
         st.plotly_chart(fig, use_container_width=True)
 
-        # Detail table inside expander
-        with st.expander("📋 Detail breakdown — ODA vs Non-ODA by company"):
-            df_co = get_oda_sla_by_company()
+        # Detail table — always visible, full width, directly below the chart.
+        st.markdown("**Detail breakdown — ODA vs Non-ODA by company**")
+        df_co = get_oda_sla_by_company()
 
-            # Compute percentages, avoid divide by zero
-            def safe_pct(num, den):
-                return (num / den * 100).round(1).where(den > 0, 0.0)
+        # Compute percentages, avoid divide by zero
+        def safe_pct(num, den):
+            return (num / den * 100).round(1).where(den > 0, 0.0)
 
-            df_co['oda_early_pct']  = safe_pct(df_co['oda_early'],  df_co['oda_total'])
-            df_co['oda_ontime_pct'] = safe_pct(df_co['oda_ontime'], df_co['oda_total'])
-            df_co['oda_late_pct']   = safe_pct(df_co['oda_late'],   df_co['oda_total'])
-            df_co['non_early_pct']  = safe_pct(df_co['non_early'],  df_co['non_total'])
-            df_co['non_ontime_pct'] = safe_pct(df_co['non_ontime'], df_co['non_total'])
-            df_co['non_late_pct']   = safe_pct(df_co['non_late'],   df_co['non_total'])
+        df_co['oda_early_pct']  = safe_pct(df_co['oda_early'],  df_co['oda_total'])
+        df_co['oda_ontime_pct'] = safe_pct(df_co['oda_ontime'], df_co['oda_total'])
+        df_co['oda_late_pct']   = safe_pct(df_co['oda_late'],   df_co['oda_total'])
+        df_co['non_early_pct']  = safe_pct(df_co['non_early'],  df_co['non_total'])
+        df_co['non_ontime_pct'] = safe_pct(df_co['non_ontime'], df_co['non_total'])
+        df_co['non_late_pct']   = safe_pct(df_co['non_late'],   df_co['non_total'])
 
-            # Build display DataFrame with % strings
-            display = pd.DataFrame({
-                'Company':          df_co['company'],
-                'ODA Early %':      df_co['oda_early_pct'].apply(lambda x: f"{x:.1f}%"),
-                'ODA On Time %':    df_co['oda_ontime_pct'].apply(lambda x: f"{x:.1f}%"),
-                'ODA Late %':       df_co['oda_late_pct'].apply(lambda x: f"{x:.1f}%"),
-                'Non-ODA Early %':  df_co['non_early_pct'].apply(lambda x: f"{x:.1f}%"),
-                'Non-ODA On Time %':df_co['non_ontime_pct'].apply(lambda x: f"{x:.1f}%"),
-                'Non-ODA Late %':   df_co['non_late_pct'].apply(lambda x: f"{x:.1f}%"),
-            })
+        # Build display DataFrame with % strings
+        display = pd.DataFrame({
+            'Company':          df_co['company'],
+            'ODA Early %':      df_co['oda_early_pct'].apply(lambda x: f"{x:.1f}%"),
+            'ODA On Time %':    df_co['oda_ontime_pct'].apply(lambda x: f"{x:.1f}%"),
+            'ODA Late %':       df_co['oda_late_pct'].apply(lambda x: f"{x:.1f}%"),
+            'Non-ODA Early %':  df_co['non_early_pct'].apply(lambda x: f"{x:.1f}%"),
+            'Non-ODA On Time %':df_co['non_ontime_pct'].apply(lambda x: f"{x:.1f}%"),
+            'Non-ODA Late %':   df_co['non_late_pct'].apply(lambda x: f"{x:.1f}%"),
+        })
 
-            # Color config — green for Early cols, blue for OnTime, red for Late
-            # Late cells also get intensity based on value
-            column_config = {
-                'ODA Early %':       st.column_config.TextColumn(
-                    'Early %', help='ODA Early %'),
-                'ODA On Time %':     st.column_config.TextColumn(
-                    'On Time %', help='ODA On Time %'),
-                'ODA Late %':        st.column_config.TextColumn(
-                    'Late %', help='ODA Late %'),
-                'Non-ODA Early %':   st.column_config.TextColumn(
-                    'Early %', help='Non-ODA Early %'),
-                'Non-ODA On Time %': st.column_config.TextColumn(
-                    'On Time %', help='Non-ODA On Time %'),
-                'Non-ODA Late %':    st.column_config.TextColumn(
-                    'Late %', help='Non-ODA Late %'),
-            }
+        # Color config — green for Early cols, blue for OnTime, red for Late
+        # Late cells also get intensity based on value
+        column_config = {
+            'ODA Early %':       st.column_config.TextColumn(
+                'Early %', help='ODA Early %'),
+            'ODA On Time %':     st.column_config.TextColumn(
+                'On Time %', help='ODA On Time %'),
+            'ODA Late %':        st.column_config.TextColumn(
+                'Late %', help='ODA Late %'),
+            'Non-ODA Early %':   st.column_config.TextColumn(
+                'Early %', help='Non-ODA Early %'),
+            'Non-ODA On Time %': st.column_config.TextColumn(
+                'On Time %', help='Non-ODA On Time %'),
+            'Non-ODA Late %':    st.column_config.TextColumn(
+                'Late %', help='Non-ODA Late %'),
+        }
 
-            # Inject CSS to color the column headers and Late cells
-            st.markdown("""
-            <style>
-            [data-testid="stDataFrame"] th:nth-child(2),
-            [data-testid="stDataFrame"] th:nth-child(5) {
-                color: #4ADE80 !important; font-weight: 600 !important;
-            }
-            [data-testid="stDataFrame"] th:nth-child(3),
-            [data-testid="stDataFrame"] th:nth-child(6) {
-                color: #60A5FA !important; font-weight: 600 !important;
-            }
-            [data-testid="stDataFrame"] th:nth-child(4),
-            [data-testid="stDataFrame"] th:nth-child(7) {
-                color: #F87171 !important; font-weight: 600 !important;
-            }
-            </style>
-            """, unsafe_allow_html=True)
+        # Inject CSS to color the column headers and Late cells
+        st.markdown("""
+        <style>
+        [data-testid="stDataFrame"] th:nth-child(2),
+        [data-testid="stDataFrame"] th:nth-child(5) {
+            color: #4ADE80 !important; font-weight: 600 !important;
+        }
+        [data-testid="stDataFrame"] th:nth-child(3),
+        [data-testid="stDataFrame"] th:nth-child(6) {
+            color: #60A5FA !important; font-weight: 600 !important;
+        }
+        [data-testid="stDataFrame"] th:nth-child(4),
+        [data-testid="stDataFrame"] th:nth-child(7) {
+            color: #F87171 !important; font-weight: 600 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
 
-            st.dataframe(display, use_container_width=True,
-                         hide_index=True, column_config=column_config)
+        st.dataframe(display, use_container_width=True,
+                     hide_index=True, column_config=column_config)
 
-            # Note about Late % coloring
-            st.caption(
-                "Late % above 25% indicates performance concern · "
-                "above 40% is critical"
-            )
+        # Note about Late % coloring
+        st.caption(
+            "Late % above 25% indicates performance concern · "
+            "above 40% is critical"
+        )
