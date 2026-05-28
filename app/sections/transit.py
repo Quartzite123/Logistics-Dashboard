@@ -90,8 +90,11 @@ def _risk_rank(label: str) -> int:
 def _add_derived(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     today = pd.Timestamp(date.today())
+    # Transit clock starts at Manifest Date; fall back to Pickup Date when absent.
+    manifest = pd.to_datetime(df["Manifest Date"], errors="coerce")
     pickup = pd.to_datetime(df["Pickup Date"], errors="coerce")
-    df["Days in Transit"] = (today - pickup).dt.days
+    start = manifest.fillna(pickup)
+    df["Days in Transit"] = (today - start).dt.days
     exp = pd.to_numeric(df["_expected_tat_days"], errors="coerce")
     days_in_transit_num = pd.to_numeric(df["Days in Transit"], errors="coerce")
     df["Days Remaining"] = (exp - days_in_transit_num).astype("Int64")

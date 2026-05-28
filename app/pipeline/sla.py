@@ -117,8 +117,12 @@ def compute_row(raw: dict) -> dict:
     oda = lookup_oda(raw.get("Pin code"))
 
     expected = expected_tat_days(origin_zone, dest_zone, oda)
+    # TAT clock starts at Manifest Date; fall back to Pickup Date when absent.
+    import pandas as pd
+    manifest_date = raw.get("Manifest Date")
+    start_date = manifest_date if pd.notna(manifest_date) else raw.get("Pickup Date")
     actual = actual_tat_days(
-        raw.get("Pickup Date"),
+        start_date,
         raw.get("Delivered Date"),
         raw.get("Current Status"),
     )
