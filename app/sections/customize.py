@@ -8,6 +8,8 @@ Restyled per CLAUDE_CODE_UI_PROMPT.md:
 """
 from __future__ import annotations
 
+import io
+from datetime import datetime
 from typing import Optional
 
 import pandas as pd
@@ -270,11 +272,12 @@ def _render_aggregate(df: pd.DataFrame) -> None:
 def _export_button(df: pd.DataFrame, key: str) -> None:
     if df.empty:
         return
-    csv_bytes = df.to_csv(index=False).encode("utf-8")
+    buf = io.BytesIO()
+    df.to_excel(buf, index=False, engine="openpyxl")
     st.download_button(
-        "Export CSV",
-        data=csv_bytes,
-        file_name=f"{key}.csv",
-        mime="text/csv",
+        "Export Excel",
+        data=buf.getvalue(),
+        file_name=f"kiirus_{key}_{datetime.now():%Y-%m-%d}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         key=f"export_{key}",
     )
