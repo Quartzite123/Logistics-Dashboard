@@ -88,6 +88,65 @@ def get_monthly_by_company() -> pd.DataFrame:
     )
 
 
+def get_oda_sla_summary() -> pd.DataFrame:
+    """Overall ODA vs Non-ODA SLA split for the bar chart."""
+    with cursor() as c:
+        c.execute(
+            """
+            SELECT
+                _oda,
+                _sla_status,
+                COUNT(*) AS count
+            FROM shipments_latest
+            WHERE current_status = 'Delivered'
+              AND _oda IN ('YES','NO')
+              AND _sla_status IN ('Early','On Time','Late')
+            GROUP BY _oda, _sla_status
+            """
+        )
+        rows = c.fetchall()
+    return pd.DataFrame(
+        [tuple(r) for r in rows], columns=["oda", "sla_status", "count"]
+    )
+
+
+def get_oda_sla_by_company() -> pd.DataFrame:
+    """Per-company ODA vs Non-ODA breakdown for the detail table."""
+    with cursor() as c:
+        c.execute(
+            """
+            SELECT
+                order_id AS company,
+                SUM(CASE WHEN _oda='YES' THEN 1 ELSE 0 END) AS oda_total,
+                SUM(CASE WHEN _oda='YES' AND _sla_status='Early'
+                    THEN 1 ELSE 0 END) AS oda_early,
+                SUM(CASE WHEN _oda='YES' AND _sla_status='On Time'
+                    THEN 1 ELSE 0 END) AS oda_ontime,
+                SUM(CASE WHEN _oda='YES' AND _sla_status='Late'
+                    THEN 1 ELSE 0 END) AS oda_late,
+                SUM(CASE WHEN _oda='NO'  THEN 1 ELSE 0 END) AS non_total,
+                SUM(CASE WHEN _oda='NO'  AND _sla_status='Early'
+                    THEN 1 ELSE 0 END) AS non_early,
+                SUM(CASE WHEN _oda='NO'  AND _sla_status='On Time'
+                    THEN 1 ELSE 0 END) AS non_ontime,
+                SUM(CASE WHEN _oda='NO'  AND _sla_status='Late'
+                    THEN 1 ELSE 0 END) AS non_late
+            FROM shipments_latest
+            WHERE current_status = 'Delivered'
+            GROUP BY order_id
+            ORDER BY (oda_total + non_total) DESC
+            """
+        )
+        rows = c.fetchall()
+    return pd.DataFrame(
+        [tuple(r) for r in rows],
+        columns=[
+            "company", "oda_total", "oda_early", "oda_ontime", "oda_late",
+            "non_total", "non_early", "non_ontime", "non_late",
+        ],
+    )
+
+
 def load_latest() -> pd.DataFrame:
     """Return shipments_latest as a DataFrame with display column names."""
     select_pieces = [f'"{DB_COL[c]}" AS "{c}"' for c in RAW_COLUMNS]
