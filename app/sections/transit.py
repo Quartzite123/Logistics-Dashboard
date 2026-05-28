@@ -14,7 +14,7 @@ from typing import Optional
 import pandas as pd
 import streamlit as st
 
-from ..components import chart_pair, data_table, layout
+from ..components import chart_pair, data_table
 from ..components.theme import render_section_header
 from ..components.upload_dialog import open_upload_dialog
 from ..store.queries import load_latest
@@ -137,15 +137,13 @@ def render() -> None:
     )
     df = df.drop(columns=["_risk_rank"])
 
-    left, right = layout.horizontal_split(section_key="transit", default="60/40")
+    # Full-width transit table — no side charts.
+    _render_table(df)
 
-    if left is not None:
-        with left:
-            _render_table(df)
-
-    if right is not None:
-        top, bottom = layout.vertical_split(section_key="transit", container=right)
-        chart_pair.render(df, section_key="transit", top_box=top, bottom_box=bottom)
+    # Both charts stacked full width below the table.
+    top = st.container()
+    bottom = st.container()
+    chart_pair.render(df, section_key="transit", top_box=top, bottom_box=bottom)
 
 
 def _render_table(df: pd.DataFrame) -> None:
