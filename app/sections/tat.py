@@ -20,7 +20,7 @@ from ..store.queries import load_latest
 
 DEFAULT_VISIBLE = [
     "LRN", "Order id", "Current Status",
-    "Pickup Date", "Delivered Date",
+    "Manifest Date", "Delivered Date",
     "_oda", "_expected_tat_days", "_actual_tat_days",
     "_tat_variance_days", "_sla_status",
 ]
@@ -63,7 +63,7 @@ def render() -> None:
 
     df = load_latest()
     df = df[df["Current Status"] == "Delivered"]
-    df = df[df["Pickup Date"].notna() & df["Delivered Date"].notna()]
+    df = df[df["Manifest Date"].notna() & df["Delivered Date"].notna()]
 
     if df.empty:
         st.info("No Delivered shipments yet. Click ↑ Upload above to load a Delhivery file.")
@@ -98,7 +98,7 @@ def _render_table(df: pd.DataFrame) -> None:
     sort_col, ascending = data_table.sort_controls(
         section_key="tat",
         sortable_columns=visible,
-        default_col="Pickup Date",
+        default_col="Manifest Date",
         default_dir="Desc",
     )
 

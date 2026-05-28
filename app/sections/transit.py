@@ -24,7 +24,7 @@ NON_DELIVERED_STATUSES = ["Manifested", "Dispatched", "In Transit", "Pending", "
 DEFAULT_VISIBLE = [
     "Current Status", "Remarks",
     "Days in Transit", "Days Remaining", "Risk Status",
-    "Pickup Date", "Destination City", "State", "Pin code",
+    "Manifest Date", "Destination City", "State", "Pin code",
 ]
 
 OPTIONAL_VISIBLE = [
