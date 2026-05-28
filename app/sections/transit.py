@@ -7,7 +7,8 @@ Restyled per CLAUDE_CODE_UI_PROMPT.md:
 """
 from __future__ import annotations
 
-from datetime import date
+import io
+from datetime import date, datetime
 from typing import Optional
 
 import pandas as pd
@@ -163,6 +164,18 @@ def _render_table(df: pd.DataFrame) -> None:
     show_df = df.rename(columns=rename_map)
     visible_display = [DISPLAY_LABEL.get(c, c) for c in visible]
     sort_col_display = DISPLAY_LABEL.get(sort_col, sort_col)
+
+    buf = io.BytesIO()
+    with pd.ExcelWriter(buf, engine="openpyxl") as writer:
+        show_df[visible_display].to_excel(writer, index=False)
+    buf.seek(0)
+    st.download_button(
+        label="⬇ Export Excel",
+        data=buf.read(),
+        file_name=f"kiirus_transit_{datetime.now():%Y-%m-%d}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        key="export_transit",
+    )
 
     data_table.render_table(
         show_df,
