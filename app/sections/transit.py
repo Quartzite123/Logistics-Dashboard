@@ -23,18 +23,21 @@ from ..store.queries import load_latest
 NON_DELIVERED_STATUSES = ["Manifested", "Dispatched", "In Transit", "Pending", "RTO"]
 
 DEFAULT_VISIBLE = [
-    "Current Status", "Remarks",
-    "Days in Transit", "Days Remaining", "Risk Status",
-    "Manifest Date", "Destination City", "State", "Pin code",
+    "LRN", "Consignee name", "Current Status", "Manifest Date",
+    "Expected Date", "Days in Transit", "Days Remaining",
+    "Risk Status", "_oda", "Last Scan Date", "Destination City",
+    "State", "Pin code",
 ]
 
+# Same full column universe as before — columns promoted into DEFAULT_VISIBLE
+# are removed here to avoid duplicates, and "Remarks" (previously only a
+# default) is demoted here so it stays available in the picker.
 OPTIONAL_VISIBLE = [
-    "LRN", "Order id", "Consignee name",
-    "Last Scan Date", "Last Scan Location",
-    "Additional Remarks", "Promise Date", "Expected Date",
+    "Order id", "Remarks", "Last Scan Location",
+    "Additional Remarks", "Promise Date",
     "Attempt Count", "No of boxes", "Weight", "Payment Type",
     "Package Amount", "First Pending Date", "Master Waybill",
-    "_oda", "_origin_zone", "_destination_zone",
+    "_origin_zone", "_destination_zone",
 ]
 
 ALL_TOGGLEABLE = DEFAULT_VISIBLE + OPTIONAL_VISIBLE
