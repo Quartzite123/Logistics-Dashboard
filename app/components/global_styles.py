@@ -34,11 +34,7 @@ def inject_global_styles() -> None:
           }}
           section[data-testid="stSidebar"] .stIFrame iframe {{ display: block; border: 0; }}
 
-          /* Hide Streamlit's native st.dataframe "Download as CSV" toolbar
-             button — it can't be configured from Python and doesn't work in
-             stlite. Excel export is offered via an explicit st.download_button. */
           [data-testid="stDataFrameToolbarButton"]:has([aria-label="Download as CSV"]) {{ display: none !important; }}
-          /* Fallback if :has() not supported */
           button[title="Download as CSV"] {{ display: none !important; }}
         </style>
         <script>
