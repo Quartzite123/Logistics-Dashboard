@@ -149,9 +149,20 @@
     postHeight();
   }
 
+  // Measure the real content height from #kpi-root, not document.body:
+  // inside a Streamlit component iframe, body.scrollHeight tracks the frame
+  // height once the frame is taller than the content, so measuring body and
+  // adding a fudge factor feeds back through the resize listener and the
+  // frame grows on every cycle. The 12px is the fixed body padding (4 top +
+  // 8 bottom from index.html). _lastHeight guards against re-posting an
+  // unchanged height, which is what stops the resize feedback loop.
+  let _lastHeight = -1;
   function postHeight() {
     requestAnimationFrame(() => {
-      const h = Math.max(40, document.body.scrollHeight + 4);
+      const rect = root.getBoundingClientRect();
+      const h = Math.max(40, Math.ceil(rect.height) + 12);
+      if (h === _lastHeight) return;
+      _lastHeight = h;
       post("streamlit:setFrameHeight", { height: h });
     });
   }
