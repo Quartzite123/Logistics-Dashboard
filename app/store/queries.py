@@ -30,6 +30,64 @@ def get_monthly_trend() -> pd.DataFrame:
     )
 
 
+def get_aggregate_by_company() -> pd.DataFrame:
+    """Per-company totals, order share, and status / SLA bucket counts."""
+    with cursor() as c:
+        c.execute(
+            """
+            SELECT
+                s.order_id                                    AS company,
+                COUNT(*)                                      AS total_orders,
+                ROUND(COUNT(*)*100.0 / SUM(COUNT(*)) OVER(),1) AS order_share_pct,
+                SUM(CASE WHEN s.current_status='Delivered' THEN 1 ELSE 0 END) AS delivered,
+                SUM(CASE WHEN s.current_status NOT IN ('Delivered','RTO') THEN 1 ELSE 0 END) AS in_transit,
+                SUM(CASE WHEN s._sla_status='Early'   THEN 1 ELSE 0 END) AS early,
+                SUM(CASE WHEN s._sla_status='On Time' THEN 1 ELSE 0 END) AS on_time,
+                SUM(CASE WHEN s._sla_status='Late'    THEN 1 ELSE 0 END) AS late,
+                SUM(CASE WHEN s.current_status='RTO'  THEN 1 ELSE 0 END) AS rto
+            FROM shipments_latest s
+            GROUP BY s.order_id
+            ORDER BY total_orders DESC
+            """
+        )
+        rows = [tuple(r) for r in c.fetchall()]
+    return pd.DataFrame(
+        rows,
+        columns=[
+            "company", "total_orders", "order_share_pct", "delivered",
+            "in_transit", "early", "on_time", "late", "rto",
+        ],
+    )
+
+
+def get_monthly_by_company() -> pd.DataFrame:
+    """Per-company, per-month order volume + SLA buckets, keyed on Manifest Date."""
+    with cursor() as c:
+        c.execute(
+            """
+            SELECT
+                s.order_id AS company,
+                strftime('%Y-%m', s.manifest_date) AS month,
+                COUNT(*) AS total,
+                SUM(CASE WHEN s._sla_status='Early'   THEN 1 ELSE 0 END) AS early,
+                SUM(CASE WHEN s._sla_status='On Time' THEN 1 ELSE 0 END) AS on_time,
+                SUM(CASE WHEN s._sla_status='Late'    THEN 1 ELSE 0 END) AS late,
+                SUM(CASE WHEN s.current_status NOT IN ('Delivered','RTO') THEN 1 ELSE 0 END) AS not_delivered
+            FROM shipments_latest s
+            WHERE s.manifest_date IS NOT NULL
+            GROUP BY s.order_id, month
+            ORDER BY s.order_id, month
+            """
+        )
+        rows = [tuple(r) for r in c.fetchall()]
+    return pd.DataFrame(
+        rows,
+        columns=[
+            "company", "month", "total", "early", "on_time", "late", "not_delivered",
+        ],
+    )
+
+
 def load_latest() -> pd.DataFrame:
     """Return shipments_latest as a DataFrame with display column names."""
     select_pieces = [f'"{DB_COL[c]}" AS "{c}"' for c in RAW_COLUMNS]

@@ -9,7 +9,7 @@ import streamlit as st
 
 from app.store.db import init_db
 from app.store.seed import seed_all_if_empty
-from app.sections import landing, tat, transit, customize, edit
+from app.sections import landing, aggregate, tat, transit, customize, edit
 from app.components.global_styles import inject_global_styles
 from app.components.theme import ensure_session_defaults
 from app.components import sidebar_component
@@ -29,6 +29,7 @@ seed_all_if_empty()
 # ---- nav definition -------------------------------------------------------
 NAV_ITEMS: list[tuple[str, callable]] = [
     ("Landing",      landing.render),
+    ("Aggregate",    aggregate.render),
     ("TAT Analysis", tat.render),
     ("Transit",      transit.render),
     ("Customize",    customize.render),
