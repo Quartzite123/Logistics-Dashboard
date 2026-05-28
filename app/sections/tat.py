@@ -181,6 +181,14 @@ def _render_oda_performance() -> None:
         df_co['non_early_pct']  = safe_pct(df_co['non_early'],  df_co['non_total'])
         df_co['non_ontime_pct'] = safe_pct(df_co['non_ontime'], df_co['non_total'])
         df_co['non_late_pct']   = safe_pct(df_co['non_late'],   df_co['non_total'])
+        df_co['oda_sla_pct']  = safe_pct(
+            df_co['oda_early']  + df_co['oda_ontime'],
+            df_co['oda_total']
+        )
+        df_co['non_sla_pct']  = safe_pct(
+            df_co['non_early']  + df_co['non_ontime'],
+            df_co['non_total']
+        )
 
         # Build display DataFrame with % strings
         display = pd.DataFrame({
@@ -188,9 +196,11 @@ def _render_oda_performance() -> None:
             'ODA Early %':      df_co['oda_early_pct'].apply(lambda x: f"{x:.1f}%"),
             'ODA On Time %':    df_co['oda_ontime_pct'].apply(lambda x: f"{x:.1f}%"),
             'ODA Late %':       df_co['oda_late_pct'].apply(lambda x: f"{x:.1f}%"),
+            'ODA SLA %':        df_co['oda_sla_pct'].apply(lambda x: f"{x:.1f}%"),
             'Non-ODA Early %':  df_co['non_early_pct'].apply(lambda x: f"{x:.1f}%"),
             'Non-ODA On Time %':df_co['non_ontime_pct'].apply(lambda x: f"{x:.1f}%"),
             'Non-ODA Late %':   df_co['non_late_pct'].apply(lambda x: f"{x:.1f}%"),
+            'Non-ODA SLA %':    df_co['non_sla_pct'].apply(lambda x: f"{x:.1f}%"),
         })
 
         # Color config — green for Early cols, blue for OnTime, red for Late
