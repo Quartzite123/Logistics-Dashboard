@@ -37,9 +37,15 @@ def render() -> None:
     # Month-on-Month trend chart (replaces the old bottom line chart).
     df_trend = get_monthly_trend()
     if not df_trend.empty:
+        # Pre-format months as human-readable labels so Plotly treats them as
+        # plain categories (e.g. "Nov 2025") instead of date-parsing "2025-11"
+        # into weekly ticks.
+        df_trend['month_label'] = (
+            pd.to_datetime(df_trend['month'] + '-01').dt.strftime('%b %Y')
+        )
         fig = go.Figure()
         fig.add_trace(go.Scatter(
-            x=df_trend['month'], y=df_trend['total_orders'],
+            x=df_trend['month_label'], y=df_trend['total_orders'],
             name='Total Orders', mode='lines+markers+text',
             line=dict(color='#60A5FA', width=2),
             fill='tozeroy',
@@ -49,40 +55,27 @@ def render() -> None:
             textfont=dict(size=11)
         ))
         fig.add_trace(go.Scatter(
-            x=df_trend['month'], y=df_trend['early'],
+            x=df_trend['month_label'], y=df_trend['early'],
             name='Early', mode='lines+markers',
             line=dict(color='#4ADE80', width=2, dash='dash')
         ))
         fig.add_trace(go.Scatter(
-            x=df_trend['month'], y=df_trend['on_time'],
+            x=df_trend['month_label'], y=df_trend['on_time'],
             name='On Time', mode='lines+markers',
             line=dict(color='#A78BFA', width=2, dash='dash')
         ))
         fig.add_trace(go.Scatter(
-            x=df_trend['month'], y=df_trend['late'],
+            x=df_trend['month_label'], y=df_trend['late'],
             name='Late', mode='lines+markers+text',
             line=dict(color='#F87171', width=2, dash='dash'),
             text=df_trend['late'],
             textposition='top center',
             textfont=dict(size=11)
         ))
-        # Merge the category x-axis into the themed layout so months render as
-        # 4 clean ticks ('Nov 2025'...) instead of weekly date ticks. Merging
-        # avoids a duplicate 'xaxis' kwarg (get_plotly_layout already sets one).
-        layout = get_plotly_layout()
-        layout['xaxis'] = {
-            **layout.get('xaxis', {}),
-            'type': 'category',
-            'tickvals': df_trend['month'].tolist(),
-            'ticktext': [
-                pd.to_datetime(m + '-01').strftime('%b %Y')
-                for m in df_trend['month'].tolist()
-            ],
-        }
         fig.update_layout(
             title='Month on Month Order Volume & Delivery Trend',
             yaxis_title='Number of Orders',
             xaxis_title=None,
-            **layout
+            **get_plotly_layout()
         )
         st.plotly_chart(fig, use_container_width=True)
