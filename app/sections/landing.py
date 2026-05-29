@@ -72,10 +72,13 @@ def render() -> None:
             textposition='top center',
             textfont=dict(size=11)
         ))
+        df_trend['delivered'] = (
+            df_trend['early'] + df_trend['on_time'] + df_trend['late']
+        )
         df_trend['sla_pct'] = (
             (df_trend['early'] + df_trend['on_time'])
-            / df_trend['total_orders'] * 100
-        ).round(1)
+            / df_trend['delivered'].replace(0, pd.NA) * 100
+        ).round(1).fillna(0)
 
         fig.add_trace(go.Scatter(
             x=df_trend['month_label'],
@@ -86,11 +89,20 @@ def render() -> None:
             text=[f"{v}%" for v in df_trend['sla_pct']],
             textposition='top center',
             textfont=dict(size=11),
+            yaxis='y2',
         ))
         fig.update_layout(
             title='Month on Month Order Volume & Delivery Trend',
             yaxis_title='Number of Orders',
             xaxis_title=None,
+            yaxis2=dict(
+                title='SLA %',
+                overlaying='y',
+                side='right',
+                range=[0, 100],
+                showgrid=False,
+                ticksuffix='%',
+            ),
             **get_plotly_layout()
         )
         st.plotly_chart(fig, use_container_width=True)
