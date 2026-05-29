@@ -18,6 +18,7 @@ reordered by removing and re-adding them in the desired sequence).
 """
 from __future__ import annotations
 
+import sys
 from typing import Optional, Callable
 
 import pandas as pd
@@ -82,72 +83,78 @@ _SORTABLE_CSS = """
 """
 
 
-def column_picker(
+def _is_stlite() -> bool:
+    """True when running under Pyodide/stlite (no Tornado component server)."""
+    return sys.platform == "emscripten"
+
+
+def _picker_controls(
     section_key: str,
     all_columns: list[str],
     default_visible: list[str],
-    label: str = "Columns — drag to reorder, drag between containers to show/hide",
-    display_names: Optional[dict] = None,
-) -> list[str]:
-    """Drag-and-drop column picker.
+    clear_keys: tuple = (),
+) -> None:
+    """Caption + Show all / Reset buttons shared by both picker variants.
 
-    Renders TWO containers ('Visible', 'Hidden'). The user drags column chips
-    between containers to show/hide AND within the 'Visible' container to
-    reorder them. Returns the ordered list of visible columns (internal names).
-    `display_names` maps internal column names to friendly labels for display.
+    clear_keys: extra session_state keys to drop so the underlying widget
+    re-initialises (e.g. the sortables component key).
     """
+    st.caption(
+        "Tap the dropdown to add columns · "
+        "Click × on a pill to hide that column"
+    )
+    state_key = f"_visible_cols_{section_key}"
+    ms_key = f"_ms_cols_{section_key}"
+
+    def _apply(cols):
+        st.session_state[state_key] = list(cols)
+        st.session_state[ms_key] = list(cols)
+        for k in clear_keys:
+            st.session_state.pop(k, None)
+
+    bc1, bc2 = st.columns(2)
+    bc1.button(
+        "Show all columns", key=f"showall_{section_key}",
+        on_click=lambda: _apply(all_columns), use_container_width=True,
+    )
+    bc2.button(
+        "Reset to defaults", key=f"reset_{section_key}",
+        on_click=lambda: _apply(default_visible), use_container_width=True,
+    )
+
+
+def _multiselect_picker(section_key, all_columns, default_visible, label, display_names):
+    """stlite fallback: plain multiselect (show/hide; order follows all_columns)."""
+    state_key = f"_visible_cols_{section_key}"
+    ms_key = f"_ms_cols_{section_key}"
+    if ms_key not in st.session_state:
+        st.session_state[ms_key] = list(default_visible)
+    _fmt = lambda c: (display_names or {}).get(c, c)
+
+    with st.expander(label, expanded=True):
+        chosen = st.multiselect(
+            "Visible columns",
+            options=all_columns,
+            format_func=_fmt,
+            key=ms_key,
+        )
+        _picker_controls(section_key, all_columns, default_visible)
+
+    new_visible = [c for c in all_columns if c in chosen] or list(default_visible)
+    st.session_state[state_key] = new_visible
+    return new_visible
+
+
+def _sortables_picker(section_key, all_columns, default_visible, label, display_names):
+    """Desktop: streamlit-sortables drag-and-drop with friendly labels."""
     state_key = f"_visible_cols_{section_key}"
     if state_key not in st.session_state:
         st.session_state[state_key] = list(default_visible)
-
     visible = st.session_state[state_key]
-    _fmt = lambda c: (display_names or {}).get(c, c)
-
-    if not _HAS_SORTABLES:
-        # Fallback for stlite/Pyodide: plain multiselect (show/hide only;
-        # display order follows the full column list). The multiselect's own
-        # widget key holds the state so the buttons below can update it via
-        # on_click callbacks (which run before the widget re-instantiates).
-        ms_key = f"_ms_cols_{section_key}"
-        if ms_key not in st.session_state:
-            st.session_state[ms_key] = list(default_visible)
-
-        def _show_all():
-            st.session_state[ms_key] = list(all_columns)
-
-        def _reset():
-            st.session_state[ms_key] = list(default_visible)
-
-        with st.expander(label, expanded=True):
-            chosen = st.multiselect(
-                "Visible columns",
-                options=all_columns,
-                format_func=_fmt,
-                key=ms_key,
-            )
-            st.caption(
-                "Tap the dropdown to add columns · "
-                "Click × on a pill to hide that column"
-            )
-            bc1, bc2 = st.columns(2)
-            bc1.button(
-                "Show all columns", key=f"showall_{section_key}",
-                on_click=_show_all, use_container_width=True,
-            )
-            bc2.button(
-                "Reset to defaults", key=f"reset_{section_key}",
-                on_click=_reset, use_container_width=True,
-            )
-
-        new_visible = [c for c in all_columns if c in chosen] or list(default_visible)
-        st.session_state[state_key] = new_visible
-        return new_visible
-
     hidden = [c for c in all_columns if c not in visible]
-    # Show friendly labels in the drag-drop chips, map back to internal names
-    # on read. Reverse map is derived from display_names so internal column
-    # names stay stable everywhere else in the data flow.
+    _fmt = lambda c: (display_names or {}).get(c, c)
     _rev = {v: k for k, v in (display_names or {}).items()}
+    sortable_key = f"sortable_{section_key}"
 
     with st.expander(label, expanded=False):
         result = sort_items(
@@ -159,17 +166,37 @@ def column_picker(
             multi_containers=True,
             direction="horizontal",
             custom_style=_SORTABLE_CSS,
-            key=f"sortable_{section_key}",
+            key=sortable_key,
         )
+        _picker_controls(section_key, all_columns, default_visible,
+                         clear_keys=(sortable_key,))
 
-    # `result` is a list of {'header': ..., 'items': [...]} dicts (in original
-    # order). Convert the friendly labels back to internal column names.
+    # Convert the friendly labels back to internal column names.
     if result and len(result) > 0:
         new_visible = [_rev.get(lbl, lbl) for lbl in result[0]["items"]]
     else:
         new_visible = visible
     st.session_state[state_key] = new_visible
     return new_visible
+
+
+def column_picker(
+    section_key: str,
+    all_columns: list[str],
+    default_visible: list[str],
+    label: str = "Columns — drag to reorder, drag between containers to show/hide",
+    display_names: Optional[dict] = None,
+) -> list[str]:
+    """Column show/hide + reorder picker. Returns visible columns (internal names).
+
+    Desktop uses the streamlit-sortables drag-and-drop picker (Tornado serves
+    its frontend); stlite/Pyodide — where that component can't load — falls back
+    to a plain multiselect. `_HAS_SORTABLES` guards the rare case of the package
+    being absent on desktop. Both paths show friendly labels via display_names.
+    """
+    if _is_stlite() or not _HAS_SORTABLES:
+        return _multiselect_picker(section_key, all_columns, default_visible, label, display_names)
+    return _sortables_picker(section_key, all_columns, default_visible, label, display_names)
 
 
 def sort_controls(
