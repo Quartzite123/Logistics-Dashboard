@@ -87,29 +87,58 @@ def column_picker(
     all_columns: list[str],
     default_visible: list[str],
     label: str = "Columns — drag to reorder, drag between containers to show/hide",
+    display_names: Optional[dict] = None,
 ) -> list[str]:
     """Drag-and-drop column picker.
 
     Renders TWO containers ('Visible', 'Hidden'). The user drags column chips
     between containers to show/hide AND within the 'Visible' container to
-    reorder them. Returns the ordered list of visible columns.
+    reorder them. Returns the ordered list of visible columns (internal names).
+    `display_names` maps internal column names to friendly labels for display.
     """
     state_key = f"_visible_cols_{section_key}"
     if state_key not in st.session_state:
         st.session_state[state_key] = list(default_visible)
 
     visible = st.session_state[state_key]
+    _fmt = lambda c: (display_names or {}).get(c, c)
 
     if not _HAS_SORTABLES:
         # Fallback for stlite/Pyodide: plain multiselect (show/hide only;
-        # display order follows the full column list).
-        with st.expander(label, expanded=False):
+        # display order follows the full column list). The multiselect's own
+        # widget key holds the state so the buttons below can update it via
+        # on_click callbacks (which run before the widget re-instantiates).
+        ms_key = f"_ms_cols_{section_key}"
+        if ms_key not in st.session_state:
+            st.session_state[ms_key] = list(default_visible)
+
+        def _show_all():
+            st.session_state[ms_key] = list(all_columns)
+
+        def _reset():
+            st.session_state[ms_key] = list(default_visible)
+
+        with st.expander(label, expanded=True):
             chosen = st.multiselect(
                 "Visible columns",
                 options=all_columns,
-                default=[c for c in visible if c in all_columns],
-                key=f"colpick_{section_key}",
+                format_func=_fmt,
+                key=ms_key,
             )
+            st.caption(
+                "Tap the dropdown to add columns · "
+                "Click × on a pill to hide that column"
+            )
+            bc1, bc2 = st.columns(2)
+            bc1.button(
+                "Show all columns", key=f"showall_{section_key}",
+                on_click=_show_all, use_container_width=True,
+            )
+            bc2.button(
+                "Reset to defaults", key=f"reset_{section_key}",
+                on_click=_reset, use_container_width=True,
+            )
+
         new_visible = [c for c in all_columns if c in chosen] or list(default_visible)
         st.session_state[state_key] = new_visible
         return new_visible
@@ -139,16 +168,22 @@ def sort_controls(
     sortable_columns: list[str],
     default_col: str,
     default_dir: str = "Desc",
+    display_names: Optional[dict] = None,
 ) -> tuple[str, bool]:
-    """Render Sort By + Direction. Returns (col, ascending_bool)."""
+    """Render Sort By + Direction. Returns (col, ascending_bool).
+
+    `display_names` maps internal column names to friendly labels for display.
+    """
     if not sortable_columns:
         return "", True
+    _fmt = lambda c: (display_names or {}).get(c, c)
     c1, c2 = st.columns([3, 1])
     default_idx = sortable_columns.index(default_col) if default_col in sortable_columns else 0
     col = c1.selectbox(
         "Sort By",
         options=sortable_columns,
         index=default_idx,
+        format_func=_fmt,
         key=f"sort_col_{section_key}",
     )
     direction = c2.selectbox(

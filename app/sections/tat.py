@@ -96,12 +96,14 @@ def _render_table(df: pd.DataFrame) -> None:
         section_key="tat",
         all_columns=ALL_TOGGLEABLE,
         default_visible=DEFAULT_VISIBLE,
+        display_names=DISPLAY_LABEL,
     )
     sort_col, ascending = data_table.sort_controls(
         section_key="tat",
         sortable_columns=visible,
         default_col="Manifest Date",
         default_dir="Desc",
+        display_names=DISPLAY_LABEL,
     )
 
     rename_map = {k: v for k, v in DISPLAY_LABEL.items() if k in df.columns and k in visible}

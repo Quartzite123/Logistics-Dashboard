@@ -153,12 +153,14 @@ def _render_table(df: pd.DataFrame) -> None:
         section_key="transit",
         all_columns=ALL_TOGGLEABLE,
         default_visible=DEFAULT_VISIBLE,
+        display_names=DISPLAY_LABEL,
     )
     sort_col, ascending = data_table.sort_controls(
         section_key="transit",
         sortable_columns=visible,
         default_col="Days in Transit",
         default_dir="Desc",
+        display_names=DISPLAY_LABEL,
     )
     rename_map = {k: v for k, v in DISPLAY_LABEL.items() if k in df.columns}
     show_df = df.rename(columns=rename_map)
