@@ -164,7 +164,18 @@ def _render_oda_performance() -> None:
             bargroupgap=0.05,
             **get_plotly_layout()
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(
+            fig,
+            use_container_width=True,
+            config={
+                'displayModeBar': False,
+                'staticPlot': False,
+                'scrollZoom': False,
+                'doubleClick': False,
+                'showAxisDragHandles': False,
+                'showAxisRangeEntryBoxes': False,
+            },
+        )
 
         # Detail table — always visible, full width, directly below the chart.
         st.markdown("**Detail breakdown — ODA vs Non-ODA by company**")

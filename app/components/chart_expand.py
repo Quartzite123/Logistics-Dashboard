@@ -23,7 +23,19 @@ def render_chart_with_expand(
     extra_md: Optional[str] = None,
 ) -> None:
     """Render a chart inline plus a small Expand button beneath it."""
-    st.plotly_chart(fig, use_container_width=True, key=f"chart_{key}")
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        key=f"chart_{key}",
+        config={
+            'displayModeBar': False,
+            'staticPlot': False,
+            'scrollZoom': False,
+            'doubleClick': False,
+            'showAxisDragHandles': False,
+            'showAxisRangeEntryBoxes': False,
+        },
+    )
 
     expanded_key = f"_chart_expanded_{key}"
 
@@ -40,7 +52,19 @@ def render_chart_with_expand(
             # Render a larger version of the figure.
             big = go.Figure(fig)  # shallow copy
             big.update_layout(height=520, margin=dict(l=20, r=20, t=40, b=20))
-            st.plotly_chart(big, use_container_width=True, key=f"dialog_chart_{key}")
+            st.plotly_chart(
+                big,
+                use_container_width=True,
+                key=f"dialog_chart_{key}",
+                config={
+                    'displayModeBar': False,
+                    'staticPlot': False,
+                    'scrollZoom': False,
+                    'doubleClick': False,
+                    'showAxisDragHandles': False,
+                    'showAxisRangeEntryBoxes': False,
+                },
+            )
 
             if extra_md:
                 st.markdown(extra_md)

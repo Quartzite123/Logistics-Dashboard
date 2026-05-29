@@ -104,7 +104,18 @@ def render() -> None:
             ),
             **get_plotly_layout()
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(
+            fig,
+            use_container_width=True,
+            config={
+                'displayModeBar': False,
+                'staticPlot': False,
+                'scrollZoom': False,
+                'doubleClick': False,
+                'showAxisDragHandles': False,
+                'showAxisRangeEntryBoxes': False,
+            },
+        )
 
         summary = pd.DataFrame({
             'Month':        df_trend['month_label'],

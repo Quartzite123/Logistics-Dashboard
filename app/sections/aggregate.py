@@ -110,7 +110,18 @@ def _render_grouped_bar(agg: pd.DataFrame) -> None:
         xaxis_title=None,
         **layout,
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        config={
+            'displayModeBar': False,
+            'staticPlot': False,
+            'scrollZoom': False,
+            'doubleClick': False,
+            'showAxisDragHandles': False,
+            'showAxisRangeEntryBoxes': False,
+        },
+    )
 
 
 def _render_monthly_stacked() -> None:
@@ -147,4 +158,15 @@ def _render_monthly_stacked() -> None:
         xaxis_title=None,
         **get_plotly_layout(),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        config={
+            'displayModeBar': False,
+            'staticPlot': False,
+            'scrollZoom': False,
+            'doubleClick': False,
+            'showAxisDragHandles': False,
+            'showAxisRangeEntryBoxes': False,
+        },
+    )
