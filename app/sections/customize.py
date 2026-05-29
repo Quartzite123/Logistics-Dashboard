@@ -54,8 +54,7 @@ def _sla_classifier(row: pd.Series) -> Optional[str]:
 
 def render() -> None:
     upload_clicked = render_section_header("Customize", show_upload_button=True)
-    if upload_clicked:
-        open_upload_dialog()
+    open_upload_dialog(upload_clicked)
 
     df_all = load_latest()
     if df_all.empty:

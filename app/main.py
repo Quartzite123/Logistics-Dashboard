@@ -93,6 +93,8 @@ def main() -> None:
         st.session_state["sidebar_width"] = "standard"
     if "density" not in st.session_state:
         st.session_state["density"] = "balanced"
+    if "show_upload" not in st.session_state:
+        st.session_state["show_upload"] = False
 
     inject_global_styles()
 

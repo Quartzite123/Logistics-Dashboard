@@ -27,8 +27,7 @@ from ..store.queries import get_aggregate_by_company, get_monthly_by_company
 
 def render() -> None:
     upload_clicked = render_section_header("Aggregate", show_upload_button=True)
-    if upload_clicked:
-        open_upload_dialog()
+    open_upload_dialog(upload_clicked)
 
     agg = get_aggregate_by_company()
     if agg.empty:

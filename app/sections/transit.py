@@ -110,8 +110,7 @@ def _add_derived(df: pd.DataFrame) -> pd.DataFrame:
 
 def render() -> None:
     upload_clicked = render_section_header("Transit", show_upload_button=True)
-    if upload_clicked:
-        open_upload_dialog()
+    open_upload_dialog(upload_clicked)
 
     df = load_latest()
     df = df[df["Current Status"].isin(NON_DELIVERED_STATUSES)]
