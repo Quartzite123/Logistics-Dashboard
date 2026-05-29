@@ -144,12 +144,17 @@ def column_picker(
         return new_visible
 
     hidden = [c for c in all_columns if c not in visible]
+    # Show friendly labels in the drag-drop chips, map back to internal names
+    # on read. Reverse map is derived from display_names so internal column
+    # names stay stable everywhere else in the data flow.
+    _rev = {v: k for k, v in (display_names or {}).items()}
 
     with st.expander(label, expanded=False):
         result = sort_items(
             items=[
-                {"header": "Visible (left → right = display order)", "items": visible},
-                {"header": "Hidden", "items": hidden},
+                {"header": "Visible (left → right = display order)",
+                 "items": [_fmt(c) for c in visible]},
+                {"header": "Hidden", "items": [_fmt(c) for c in hidden]},
             ],
             multi_containers=True,
             direction="horizontal",
@@ -157,8 +162,12 @@ def column_picker(
             key=f"sortable_{section_key}",
         )
 
-    # `result` is a list of {'header': ..., 'items': [...]} dicts (in original order).
-    new_visible = result[0]["items"] if result and len(result) > 0 else visible
+    # `result` is a list of {'header': ..., 'items': [...]} dicts (in original
+    # order). Convert the friendly labels back to internal column names.
+    if result and len(result) > 0:
+        new_visible = [_rev.get(lbl, lbl) for lbl in result[0]["items"]]
+    else:
+        new_visible = visible
     st.session_state[state_key] = new_visible
     return new_visible
 
