@@ -21,46 +21,36 @@ def inject_global_styles() -> None:
     density = st.session_state.get("density", "balanced")
     sidebar_width = st.session_state.get("sidebar_width", "standard")
 
+    # Left-aligned, blank-line-free HTML so Streamlit's markdown renderer treats
+    # it as one raw-HTML block (indented / blank-line-separated content can leak
+    # as visible text).
     st.markdown(
-        f"""
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-        <style>
-          html {{ font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }}
-          section[data-testid="stSidebar"] > div:first-child {{
-            padding: 0 !important;
-            background: transparent !important;
-          }}
-          section[data-testid="stSidebar"] .stIFrame iframe {{ display: block; border: 0; }}
-
-          [data-testid="stDataFrameToolbarButton"]:has([aria-label="Download as CSV"]) {{ display: none !important; }}
-          button[title="Download as CSV"] {{ display: none !important; }}
-
-          [data-testid="stPlotlyChart"] {{
-            touch-action: pan-x pan-y pinch-zoom !important;
-          }}
-          [data-testid="stPlotlyChart"] * {{
-            touch-action: inherit !important;
-          }}
-          .js-plotly-plot,
-          .js-plotly-plot * {{
-            touch-action: pan-x pan-y pinch-zoom !important;
-          }}
-        </style>
-        <script>
-          (function () {{
-            try {{
-              const root = window.parent.document.documentElement;
-              root.dataset.theme = "{theme}";
-              root.dataset.density = "{density}";
-              root.dataset.sidebar = "{sidebar_width}";
-              document.documentElement.dataset.theme = "{theme}";
-              document.documentElement.dataset.density = "{density}";
-              document.documentElement.dataset.sidebar = "{sidebar_width}";
-            }} catch (e) {{}}
-          }})();
-        </script>
-        """,
+        f"""<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+html {{ font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }}
+section[data-testid="stSidebar"] > div:first-child {{ padding: 0 !important; background: transparent !important; }}
+section[data-testid="stSidebar"] .stIFrame iframe {{ display: block; border: 0; }}
+[data-testid="stDataFrameToolbarButton"]:has([aria-label="Download as CSV"]) {{ display: none !important; }}
+button[title="Download as CSV"] {{ display: none !important; }}
+[data-testid="stPlotlyChart"] {{ touch-action: pan-x pan-y pinch-zoom !important; }}
+[data-testid="stPlotlyChart"] * {{ touch-action: inherit !important; }}
+.js-plotly-plot, .js-plotly-plot * {{ touch-action: pan-x pan-y pinch-zoom !important; }}
+</style>
+<script>
+(function () {{
+  try {{
+    const root = window.parent.document.documentElement;
+    root.dataset.theme = "{theme}";
+    root.dataset.density = "{density}";
+    root.dataset.sidebar = "{sidebar_width}";
+    document.documentElement.dataset.theme = "{theme}";
+    document.documentElement.dataset.density = "{density}";
+    document.documentElement.dataset.sidebar = "{sidebar_width}";
+  }} catch (e) {{}}
+}})();
+</script>
+""",
         unsafe_allow_html=True,
     )
