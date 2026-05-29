@@ -36,6 +36,17 @@ def inject_global_styles() -> None:
 
           [data-testid="stDataFrameToolbarButton"]:has([aria-label="Download as CSV"]) {{ display: none !important; }}
           button[title="Download as CSV"] {{ display: none !important; }}
+
+          [data-testid="stPlotlyChart"] {{
+            touch-action: pan-x pan-y pinch-zoom !important;
+          }}
+          [data-testid="stPlotlyChart"] * {{
+            touch-action: inherit !important;
+          }}
+          .js-plotly-plot,
+          .js-plotly-plot * {{
+            touch-action: pan-x pan-y pinch-zoom !important;
+          }}
         </style>
         <script>
           (function () {{
