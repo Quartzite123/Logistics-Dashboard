@@ -1,45 +1,47 @@
-/*
- * Minimal service worker — caches the stlite bundle so installed PWAs work
- * fully offline after first launch.
- *
- * After a deploy, bump CACHE_NAME so existing PWAs refresh.
- */
-const CACHE_NAME = "kiirus-v3";
-const PRECACHE = [
-  "./",
-  "./index.html",
-  "../manifest.json",
-];
+const APP_CACHE = 'kiirus-app-v1';
+const PYODIDE_CACHE = 'pyodide-immutable';
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE))
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(APP_CACHE).then(c => c.addAll(['./index.html']))
   );
   self.skipWaiting();
 });
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((names) =>
-      Promise.all(names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n)))
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(k => k.startsWith('kiirus-app-') && k !== APP_CACHE)
+            .map(k => caches.delete(k))
+      )
     )
   );
-  self.clients.claim();
 });
 
-self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((resp) => {
-        // Cache successful GETs for next-time offline use.
-        if (resp && resp.status === 200 && resp.type === "basic") {
-          const clone = resp.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return resp;
-      });
-    })
+self.addEventListener('fetch', e => {
+  const url = e.request.url;
+
+  // Pyodide and CDN assets — cache forever, never invalidate
+  if (url.includes('cdn.jsdelivr.net') ||
+      url.includes('pyodide') ||
+      url.includes('cdnjs.cloudflare.com')) {
+    e.respondWith(
+      caches.open(PYODIDE_CACHE).then(cache =>
+        cache.match(e.request).then(cached => {
+          if (cached) return cached;
+          return fetch(e.request).then(res => {
+            cache.put(e.request, res.clone());
+            return res;
+          });
+        })
+      )
+    );
+    return;
+  }
+
+  // App files — use updated version when available
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request))
   );
 });
