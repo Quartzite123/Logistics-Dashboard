@@ -23,12 +23,61 @@ from .schema import (
 )
 
 # Under stlite / Pyodide (sys.platform == "emscripten") the filesystem is
-# virtual; "/kiirus.db" is mapped to IndexedDB by stlite's persistence layer
-# so the database survives page reloads. Elsewhere, use a repo-root path.
+# virtual and resets on reload. We mount Pyodide's IDBFS at /persist and keep
+# the SQLite DB there so it survives app closes on phone/desktop. syncfs(True)
+# loads previously persisted data on startup; syncfs(False) flushes writes back
+# to IndexedDB after commits.
+_IDBFS_MOUNTED = False
+
+
+def _mount_idbfs() -> None:
+    """Mount Pyodide's IDBFS for persistent storage (no-op outside WASM)."""
+    global _IDBFS_MOUNTED
+    if _IDBFS_MOUNTED or sys.platform != "emscripten":
+        return
+    try:
+        import pyodide_js
+
+        try:
+            pyodide_js.FS.mkdir("/persist")
+        except Exception:
+            pass  # directory already exists
+        pyodide_js.FS.mount(pyodide_js.FS.filesystems.IDBFS, {}, "/persist")
+
+        # Load any previously persisted data from IndexedDB (syncfs(True)).
+        loaded = False
+
+        def _cb(err):
+            nonlocal loaded
+            loaded = True
+
+        pyodide_js.FS.syncfs(True, _cb)
+        import time
+        for _ in range(50):
+            if loaded:
+                break
+            time.sleep(0.1)
+        _IDBFS_MOUNTED = True
+    except Exception as e:  # pragma: no cover - WASM-only path
+        print(f"IDBFS mount failed, falling back to MEMFS: {e}")
+
+
 if sys.platform == "emscripten":
-    DB_PATH = Path("/kiirus.db")
+    _mount_idbfs()
+    DB_PATH = Path("/persist/kiirus.db") if _IDBFS_MOUNTED else Path("/kiirus.db")
 else:
     DB_PATH = Path(__file__).resolve().parent.parent.parent / "kiirus.db"
+
+
+def sync_to_idb() -> None:
+    """Flush filesystem writes back to IndexedDB. Called after write commits."""
+    if sys.platform != "emscripten" or not _IDBFS_MOUNTED:
+        return
+    try:
+        import pyodide_js
+        pyodide_js.FS.syncfs(False, lambda err: None)
+    except Exception:
+        pass
 
 
 # ---------------------------------------------------------------------------
@@ -37,9 +86,14 @@ else:
 
 def get_conn() -> sqlite3.Connection:
     """Return a SQLite connection with sensible defaults."""
-    conn = sqlite3.connect(DB_PATH, detect_types=sqlite3.PARSE_DECLTYPES)
+    conn = sqlite3.connect(str(DB_PATH), detect_types=sqlite3.PARSE_DECLTYPES)
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL;")
+    # WAL's -wal/-shm sidecar files don't sync cleanly through IDBFS, so use the
+    # single-file DELETE journal under Pyodide; keep WAL everywhere else.
+    if sys.platform == "emscripten":
+        conn.execute("PRAGMA journal_mode=DELETE;")
+    else:
+        conn.execute("PRAGMA journal_mode=WAL;")
     conn.execute("PRAGMA busy_timeout=5000;")
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
@@ -53,6 +107,7 @@ def cursor():
         cur = conn.cursor()
         yield cur
         conn.commit()
+        sync_to_idb()
     except Exception:
         conn.rollback()
         raise
