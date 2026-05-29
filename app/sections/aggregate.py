@@ -63,6 +63,9 @@ def _render_table(agg: pd.DataFrame) -> None:
         "RTO", "Early %", "On Time %", "Late %", "SLA %",
     ]]
 
+    display = display.sort_values(
+        "Total Orders", ascending=False
+    ).reset_index(drop=True)
     st.dataframe(display, hide_index=True, use_container_width=True, height=440)
 
     buf = io.BytesIO()
@@ -92,12 +95,20 @@ def _render_grouped_bar(agg: pd.DataFrame) -> None:
         x=agg["company"], y=agg["late_pct"], name="Late %",
         marker_color=STATUS_LATE,
     ))
+    # Merge a fixed 0-100% y-axis into the themed layout so the axis doesn't
+    # auto-shrink to a tiny range on mobile. Merging avoids a duplicate
+    # 'yaxis' kwarg (get_plotly_layout already sets one).
+    layout = get_plotly_layout()
+    layout["yaxis"] = {
+        **layout.get("yaxis", {}),
+        "range": [0, 100],
+        "title": "Percent of delivered",
+    }
     fig.update_layout(
         title="Delivery Performance by Company",
         barmode="group",
-        yaxis_title="Percent of delivered",
         xaxis_title=None,
-        **get_plotly_layout(),
+        **layout,
     )
     st.plotly_chart(fig, use_container_width=True)
 

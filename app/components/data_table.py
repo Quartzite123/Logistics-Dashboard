@@ -22,7 +22,15 @@ from typing import Optional, Callable
 
 import pandas as pd
 import streamlit as st
-from streamlit_sortables import sort_items
+
+# streamlit-sortables isn't available under stlite/Pyodide, so import it
+# optionally and fall back to a plain multiselect column picker when missing.
+try:
+    from streamlit_sortables import sort_items
+    _HAS_SORTABLES = True
+except ImportError:
+    sort_items = None
+    _HAS_SORTABLES = False
 
 from .theme import (
     STATUS_EARLY, STATUS_ONTIME, STATUS_LATE, STATUS_PENDING,
@@ -91,6 +99,21 @@ def column_picker(
         st.session_state[state_key] = list(default_visible)
 
     visible = st.session_state[state_key]
+
+    if not _HAS_SORTABLES:
+        # Fallback for stlite/Pyodide: plain multiselect (show/hide only;
+        # display order follows the full column list).
+        with st.expander(label, expanded=False):
+            chosen = st.multiselect(
+                "Visible columns",
+                options=all_columns,
+                default=[c for c in visible if c in all_columns],
+                key=f"colpick_{section_key}",
+            )
+        new_visible = [c for c in all_columns if c in chosen] or list(default_visible)
+        st.session_state[state_key] = new_visible
+        return new_visible
+
     hidden = [c for c in all_columns if c not in visible]
 
     with st.expander(label, expanded=False):
