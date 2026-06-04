@@ -69,11 +69,17 @@ def render() -> None:
 
     df = load_latest()
     df = df[df["Current Status"] == "Delivered"]
-    df = df[df["Manifest Date"].notna() & df["Delivered Date"].notna()]
+    df = df[df["Manifest Date"].notna()]
 
     if df.empty:
         st.info("No Delivered shipments yet. Click ↑ Upload above to load a Delhivery file.")
         return
+
+    # Surface rows where zone/SLA couldn't be computed (NULL _sla_status) by
+    # labelling them "No zone data" instead of hiding them — Manifest/Delivered
+    # dates, Expected TAT, etc. will simply render blank for those rows.
+    df = df.copy()
+    df["_sla_status"] = df["_sla_status"].fillna("No zone data")
 
     # SLA filter dropdown
     sla_filter = st.selectbox(
