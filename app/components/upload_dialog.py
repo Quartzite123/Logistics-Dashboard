@@ -8,7 +8,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
-from ..pipeline.ingest import ingest_file, IngestError
+from ..pipeline.ingest import ingest_file, IngestError, clear_all_shipments
 
 
 def open_upload_dialog(triggered: bool = False) -> None:
@@ -73,6 +73,10 @@ def open_upload_dialog(triggered: bool = False) -> None:
         if process and files:
             results = []
             with st.spinner("Processing…"):
+                # Always-replace: clear prior shipments once per batch so this
+                # upload starts from a clean slate. Within the batch, multi-file
+                # dedup-by-LRN still applies.
+                clear_all_shipments()
                 for f in files:
                     try:
                         f.seek(0)

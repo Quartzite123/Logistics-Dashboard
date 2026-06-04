@@ -100,6 +100,19 @@ def _row_dict_from_pandas(record: dict) -> dict:
     return out
 
 
+def clear_all_shipments() -> None:
+    """Always-replace: delete every shipments_raw + shipments_latest row.
+
+    Called ONCE per upload batch (per Process click) from the upload dialog,
+    BEFORE the per-file loop — so multi-file uploads keep working (all files
+    in a batch ingest onto a freshly cleared DB instead of clearing between
+    iterations). The `uploads` audit table is intentionally not touched.
+    """
+    with cursor() as c:
+        c.execute("DELETE FROM shipments_latest")
+        c.execute("DELETE FROM shipments_raw")
+
+
 def ingest_file(file_like, filename: str) -> dict:
     """Ingest one Delhivery .xlsx. Returns a summary dict."""
     clear_unknown_cities()
