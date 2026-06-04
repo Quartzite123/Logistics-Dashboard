@@ -57,10 +57,10 @@ def _render_table(agg: pd.DataFrame) -> None:
         "early_pct": "Early %",
         "on_time_pct": "On Time %",
         "late_pct": "Late %",
-        "sla_pct": "SLA %",
+        "sla_pct": "E+OT %",
     })[[
         "Company", "Total Orders", "Order Share %", "Delivered", "In Transit",
-        "RTO", "Early %", "On Time %", "Late %", "SLA %",
+        "RTO", "Early %", "On Time %", "Late %", "E+OT %",
     ]]
 
     display = display.sort_values(

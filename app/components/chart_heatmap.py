@@ -22,7 +22,7 @@ from .theme import (
 from .chart_expand import render_chart_with_expand
 
 
-METRICS = ["Late %", "SLA % combined", "Avg TAT"]
+METRICS = ["Late %", "E+OT %", "Avg TAT"]
 GRANULARITIES = ["State", "Zone"]
 
 
@@ -48,7 +48,7 @@ def _build_pivot(df: pd.DataFrame, granularity: str, metric: str):
         agg_num = delivered.groupby(["_row", "_month"])["_metric_num"].sum()
         agg_denom = delivered.groupby(["_row", "_month"]).size()
         value = (100 * agg_num / agg_denom).round(0)
-    elif metric == "SLA % combined":
+    elif metric == "E+OT %":
         delivered["_metric_num"] = delivered["_sla_status"].isin(["Early", "On Time"]).astype(int)
         agg_num = delivered.groupby(["_row", "_month"])["_metric_num"].sum()
         agg_denom = delivered.groupby(["_row", "_month"]).size()
@@ -111,7 +111,7 @@ def render(df: pd.DataFrame, section_key: str) -> None:
         text = pd.DataFrame(text_rows, index=pivot_val.index, columns=pivot_val.columns)
 
     # Color scale per metric.
-    if metric == "SLA % combined":
+    if metric == "E+OT %":
         # high SLA = good = yellow (high), low = dark
         colorscale = [[0, BG_BASE], [0.5, "#5A5A5F"], [1, STATUS_EARLY]]
         zmin, zmax = 0, 100
@@ -155,7 +155,7 @@ def render(df: pd.DataFrame, section_key: str) -> None:
         value_name=metric,
     ).dropna()
     if not long.empty:
-        sort_asc = (metric == "SLA % combined")  # for SLA, lower is worse
+        sort_asc = (metric == "E+OT %")  # for SLA, lower is worse
         long = long.sort_values(metric, ascending=sort_asc).head(25)
         long[metric] = long[metric].round(1)
 

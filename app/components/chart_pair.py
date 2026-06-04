@@ -96,7 +96,7 @@ def _builder_landing(df: pd.DataFrame):
 
 def _builder_tat(df: pd.DataFrame):
     delivered = df[df["Current Status"] == "Delivered"]
-    return _pie_with_stats(delivered["_sla_status"], "SLA distribution (Delivered)")
+    return _pie_with_stats(delivered["_sla_status"], "E+OT distribution (Delivered)")
 
 
 def _builder_transit(df: pd.DataFrame):
@@ -109,7 +109,7 @@ def _builder_customize(df: pd.DataFrame):
     is_delivered = df["Current Status"] == "Delivered"
     bucket = bucket.where(is_delivered, "Not Yet Delivered")
     bucket = bucket.fillna("Not Yet Delivered")
-    return _pie_with_stats(bucket, "SLA status of filtered set")
+    return _pie_with_stats(bucket, "Delivery status of filtered set")
 
 
 PIE_BUILDERS = {

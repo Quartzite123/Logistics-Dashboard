@@ -252,14 +252,14 @@ def _render_aggregate(df: pd.DataFrame) -> None:
     agg["On Time %"] = (100 * agg["_on_time"] / denom_delivered).round(1)
     agg["Early %"]   = (100 * agg["_early"]   / denom_delivered).round(1)
     agg["Late %"]    = (100 * agg["_late"]    / denom_delivered).round(1)
-    agg["SLA % combined"] = (100 * (agg["_early"] + agg["_on_time"]) / denom_delivered).round(1)
+    agg["E+OT %"] = (100 * (agg["_early"] + agg["_on_time"]) / denom_delivered).round(1)
     agg["ODA %"] = (100 * agg["_oda_yes"] / agg["Total Orders"].replace(0, pd.NA)).round(1)
 
     cols_order = [
         "Company", "Total Orders", "Order Share %",
         "Delivered", "In Transit", "Pending", "RTO",
         "On Time %", "Early %", "Late %",
-        "SLA % combined", "ODA %",
+        "E+OT %", "ODA %",
     ]
     agg = agg[cols_order].sort_values("Total Orders", ascending=False)
     agg = format_int_for_display(agg)

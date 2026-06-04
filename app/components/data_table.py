@@ -41,7 +41,7 @@ from .theme import (
 
 
 PILL_COLUMNS = {
-    "SLA Status", "_sla_status",
+    "Delivery Status", "_sla_status",
     "Current Status",
     "Risk Status",
     "ODA", "_oda",

@@ -159,12 +159,12 @@ def render(df: pd.DataFrame) -> None:
                     "progress": {"value": _pct(on_time, delivered) or 0, "kind": "ok"},
                 },
                 {
-                    "label": "SLA (Early + On Time)",
+                    "label": "E+OT",
                     "value": _fmt_n(sla_combined),
                     "value_color": "accent",
                     "accent": True,
                     "meta": (
-                        f"{_pct(sla_combined, delivered):.1f}% SLA compliance"
+                        f"{_pct(sla_combined, delivered):.1f}% E+OT"
                         if _pct(sla_combined, delivered) is not None else "—"
                     ),
                     "progress": {"value": _pct(sla_combined, delivered) or 0},

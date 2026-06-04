@@ -45,7 +45,7 @@ DISPLAY_LABEL = {
     "_expected_tat_days": "Expected TAT",
     "_actual_tat_days": "Actual TAT",
     "_tat_variance_days": "TAT Variance",
-    "_sla_status": "SLA Status",
+    "_sla_status": "Delivery Status",
     "_origin_zone": "Origin Zone",
     "_destination_zone": "Destination Zone",
 }
@@ -53,7 +53,7 @@ DISPLAY_LABEL = {
 
 def _sla_classifier(row: pd.Series) -> Optional[str]:
     """Return one of: 'early' / 'ontime' / 'late' / None — used for left accent."""
-    val = row.get("SLA Status") or row.get("_sla_status")
+    val = row.get("Delivery Status") or row.get("_sla_status")
     if val == "Early":
         return "early"
     if val == "On Time":
@@ -77,7 +77,7 @@ def render() -> None:
 
     # SLA filter dropdown
     sla_filter = st.selectbox(
-        "SLA filter",
+        "Delivery Status filter",
         options=["All", "Early", "On Time", "Late"],
         key="tat_sla_filter",
     )
@@ -159,7 +159,7 @@ def _render_oda_performance() -> None:
             ))
         fig.update_layout(
             barmode='group',
-            title='ODA vs Non-ODA — SLA Performance',
+            title='ODA vs Non-ODA — Delivery Performance',
             yaxis_title='% of delivered orders',
             xaxis_title=None,
             bargap=0.3,
@@ -208,11 +208,11 @@ def _render_oda_performance() -> None:
             'ODA Early %':      df_co['oda_early_pct'].apply(lambda x: f"{x:.1f}%"),
             'ODA On Time %':    df_co['oda_ontime_pct'].apply(lambda x: f"{x:.1f}%"),
             'ODA Late %':       df_co['oda_late_pct'].apply(lambda x: f"{x:.1f}%"),
-            'ODA SLA %':        df_co['oda_sla_pct'].apply(lambda x: f"{x:.1f}%"),
+            'ODA E+OT %':       df_co['oda_sla_pct'].apply(lambda x: f"{x:.1f}%"),
             'Non-ODA Early %':  df_co['non_early_pct'].apply(lambda x: f"{x:.1f}%"),
             'Non-ODA On Time %':df_co['non_ontime_pct'].apply(lambda x: f"{x:.1f}%"),
             'Non-ODA Late %':   df_co['non_late_pct'].apply(lambda x: f"{x:.1f}%"),
-            'Non-ODA SLA %':    df_co['non_sla_pct'].apply(lambda x: f"{x:.1f}%"),
+            'Non-ODA E+OT %':   df_co['non_sla_pct'].apply(lambda x: f"{x:.1f}%"),
         })
 
         # Color config — green for Early cols, blue for OnTime, red for Late

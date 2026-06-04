@@ -82,7 +82,7 @@ def render() -> None:
         fig.add_trace(go.Scatter(
             x=df_trend['month_label'],
             y=df_trend['sla_pct'],
-            name='SLA %',
+            name='E+OT %',
             mode='lines+markers+text',
             line=dict(color='#FFD60A', width=2),
             text=[f"{v}%" for v in df_trend['sla_pct']],
@@ -95,7 +95,7 @@ def render() -> None:
             yaxis_title='Number of Orders',
             xaxis_title=None,
             yaxis2=dict(
-                title='SLA %',
+                title='E+OT %',
                 overlaying='y',
                 side='right',
                 range=[0, 100],
@@ -123,7 +123,7 @@ def render() -> None:
             'Early':        df_trend['early'],
             'On Time':      df_trend['on_time'],
             'Late':         df_trend['late'],
-            'SLA %':        df_trend['sla_pct'].apply(
+            'E+OT %':       df_trend['sla_pct'].apply(
                                 lambda x: f"{x:.1f}%"),
         })
         st.dataframe(summary, use_container_width=True,
