@@ -38,10 +38,15 @@ RISK_ORDER = ["At Risk", "Due Today", "On Track", "Pending"]
 
 def _add_risk_cols(df: pd.DataFrame) -> pd.DataFrame:
     """Add Risk Status / days_in_transit / days_remaining / days_overdue."""
-    today = pd.Timestamp(date.today())
     df = df.copy()
     df["manifest_date_parsed"] = pd.to_datetime(df["manifest_date"], errors="coerce")
-    df["days_in_transit"] = (today - df["manifest_date_parsed"]).dt.days
+    # Normalize both sides to midnight so the diff is pure days — without
+    # normalize, the floor in .dt.days can drift by 1 depending on the row's
+    # time-of-day vs today's midnight.
+    today = pd.Timestamp(date.today()).normalize()
+    df["days_in_transit"] = (
+        today - df["manifest_date_parsed"].dt.normalize()
+    ).dt.days
     df["days_remaining"] = df["_expected_tat_days"] - df["days_in_transit"]
 
     def risk_label(row):
