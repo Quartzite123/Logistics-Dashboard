@@ -88,6 +88,56 @@ def get_monthly_by_company() -> pd.DataFrame:
     )
 
 
+def get_undelivered_by_company() -> pd.DataFrame:
+    """All companies with undelivered order counts (current_status NOT IN Delivered/RTO)."""
+    with cursor() as c:
+        c.execute(
+            """
+            SELECT
+                order_id AS company,
+                COUNT(*) AS total_undelivered
+            FROM shipments_latest
+            WHERE current_status NOT IN ('Delivered','RTO')
+            GROUP BY order_id
+            ORDER BY total_undelivered DESC
+            """
+        )
+        rows = c.fetchall()
+    return pd.DataFrame(
+        [tuple(r) for r in rows], columns=["company", "total_undelivered"]
+    )
+
+
+def get_undelivered_orders(company: str) -> pd.DataFrame:
+    """All shipments_latest columns for one company's undelivered orders."""
+    with cursor() as c:
+        c.execute(
+            """
+            SELECT * FROM shipments_latest
+            WHERE order_id = ?
+              AND current_status NOT IN ('Delivered','RTO')
+            """,
+            (company,),
+        )
+        rows = c.fetchall()
+        cols = [d[0] for d in c.description]
+    return pd.DataFrame([tuple(r) for r in rows], columns=cols)
+
+
+def get_all_undelivered() -> pd.DataFrame:
+    """All undelivered orders across every company (for the per-company aggregate sheet)."""
+    with cursor() as c:
+        c.execute(
+            """
+            SELECT * FROM shipments_latest
+            WHERE current_status NOT IN ('Delivered','RTO')
+            """
+        )
+        rows = c.fetchall()
+        cols = [d[0] for d in c.description]
+    return pd.DataFrame([tuple(r) for r in rows], columns=cols)
+
+
 def get_oda_sla_summary() -> pd.DataFrame:
     """Overall ODA vs Non-ODA SLA split for the bar chart."""
     with cursor() as c:
